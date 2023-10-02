@@ -14,14 +14,14 @@ CoordMode("Pixel", "Screen")
 SetWinDelay(-1)
 SetControlDelay(-1)
 
-WinSpyGui()
+WinSpyGui(9, "Segoe UI", false)
 
 ~*Shift::
 ~*Ctrl:: suspend_timer()
 ~*Ctrl up::
 ~*Shift up:: SetTimer(Update)
 
-WinSpyGui()
+WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 {
 	global oGui
 	static WM_RBUTTONDOWN := 0x0204
@@ -33,7 +33,7 @@ WinSpyGui()
 	oGui           := Gui("AlwaysOnTop Resize MinSize DPIScale", "Window Spy for AHKv2")
 	oGui.BackColor := "1F1F1F"
 
-	oGui.SetFont("S11 cF8F8F8", "Segoe UI")
+	oGui.SetFont("cF8F8F8 S" fontSize, font)
 	oGui.OnEvent("Close", WinSpyClose)
 	oGui.OnEvent("Size", WinSpySize)
 	OnMessage(WM_RBUTTONUP, Right_Click_Event)
@@ -41,7 +41,7 @@ WinSpyGui()
 	oGui.Add("Text", , "Window Title, Class and Process:")
 	oGui.Add("Checkbox", "yp Right -Wrap -0x4000 vCtrl_FollowMouse").Value := 1
 	oGui.Add("Text", "xp+45 yp", "Follow Mouse").OnEvent("Click", ToggleCheck)
-	oGui.Add("Edit", "xm w320 r5 ReadOnly vCtrl_Title")
+	oGui.Add("Edit", "xm w320 r5 ReadOnly vCtrl_Title" (Wrap ? "" : " -Wrap"))
 	oGui.Add("Text", , "Mouse Position")
 	oGui.Add("Edit", "w320 r4 ReadOnly vCtrl_MousePos")
 	oGui.Add("Text", "w320 vCtrl_CtrlLabel", (txtFocusCtrl := "Focused Control") ":")
