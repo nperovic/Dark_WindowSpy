@@ -6,7 +6,8 @@ Window Spy for AHKv2 in dark mode
 ## Additional Features
 1. Resizable Window.
 2. Right-click on the selected text to copy.
-3. Be nice to your eyes. 😌
+3. Customisable font, font size, wrap text.
+4. Be nice to your eyes. 😌
 
 ## How to Use
 Save [WindowSpy.ahk](WindowSpy.ahk) in `Documents\AutoHotkey`.
