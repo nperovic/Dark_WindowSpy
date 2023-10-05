@@ -1,5 +1,6 @@
 # Dark WindowSpy
 Window Spy for AHKv2 in dark mode
+
 深色模式 AHKv2 Window Spy
 
 ![image](https://github.com/nperovic/Dark_WindowSpy/assets/122501303/163fbe48-6cd2-4204-a68a-91629ca2d593)
