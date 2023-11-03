@@ -2,7 +2,7 @@
 Window Spy for AHKv2 in dark mode
 
 深色模式 AHKv2 Window Spy
-![image](https://github.com/nperovic/Dark_WindowSpy/assets/122501303/163fbe48-6cd2-4204-a68a-91629ca2d593)
+![screenshots](https://github.com/nperovic/Dark_WindowSpy/assets/122501303/3651ab4e-67df-4fff-81c5-68a3e9d5bca4)
 
 ## Additional Features
 1. Resizable Window.
@@ -13,8 +13,6 @@ Window Spy for AHKv2 in dark mode
 ## How to Use
 Save [WindowSpy.ahk](WindowSpy.ahk) in `Documents\AutoHotkey`.
 It will be used instead of the official one, and will not be overwritten when you install a new version of AutoHotkey.
-
-![screenshots](https://github.com/nperovic/Dark_WindowSpy/assets/122501303/3651ab4e-67df-4fff-81c5-68a3e9d5bca4)
 
 ## 附加功能
 1. 可調整視窗大小。
