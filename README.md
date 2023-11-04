@@ -11,7 +11,7 @@ Window Spy for AHKv2 in dark mode
 4. Be nice to your eyes. 😌
 
 ## How to Use
-Save [WindowSpy.ahk](WindowSpy.ahk) in `Documents\AutoHotkey`.
+Save [WindowSpy.ahk](WindowSpy.ahk) in `C:\Users\<UserName>\Documents\AutoHotkey`.
 It will be used instead of the official one, and will not be overwritten when you install a new version of AutoHotkey.
 
 ## 附加功能
