@@ -2,7 +2,7 @@
  * @description Window Spy for AHKv2 in dark mode. [https://github.com/nperovic/Dark_WindowSpy]
  * @file WindowSpy.ahk
  * @author nperovic
- * @date 2023/11/04
+ * @date 2024/04/23
  * @version 1.0.1
  ***********************************************************************/
 
@@ -13,9 +13,10 @@ try TraySetIcon RegExReplace(A_AhkPath, "iS)^.+?AutoHotkey[^\\]*\\\K.+", "UX\inc
 A_IconHidden := true
 ; #NoTrayIcon
 
+Gui.Prototype.DefineProp("AddDarkCheckBox", {Call: AddDarkCheckBox})
+
 SetWorkingDir(A_ScriptDir)
 CoordMode("Pixel", "Screen")
-
 WinSpyGui(9, "Segoe UI", false)
 
 ~*Shift::
@@ -26,16 +27,17 @@ WinSpyGui(9, "Segoe UI", false)
 WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 {
 	global oGui
-	static WM_RBUTTONDOWN := 0x0204
-	     , WM_RBUTTONUP   := 0x0205
-	     , SM_CXMENUCHECK := 71
-	     , SM_CYMENUCHECK := 72
-	     , checkBoxW      := SysGet(SM_CXMENUCHECK)
-	     , checkBoxH      := SysGet(SM_CYMENUCHECK)
-		 
+    static WM_RBUTTONDOWN   := 0x0204
+    static WM_RBUTTONUP     := 0x0205
+    static SM_CXMENUCHECK   := 71
+    static SM_CYMENUCHECK   := 72
+    static checkBoxW        := SysGet(SM_CXMENUCHECK)
+    static checkBoxH        := SysGet(SM_CYMENUCHECK)
+    static WS_EX_COMPOSITED := 0x02000000
+    
 	DllCall("shell32\SetCurrentProcessExplicitAppUserModelID", "ptr", StrPtr("AutoHotkey.WindowSpy"))
 
-	oGui           := Gui("AlwaysOnTop Resize MinSize MinSizex1 DPIScale", "Window Spy for AHKv2")
+	oGui           := Gui("AlwaysOnTop Resize MinSize MinSizex1 -DPIScale +" WS_EX_COMPOSITED, "Window Spy for AHKv2")
 	oGui.MarginX   := 10
 	oGui.MarginY   := 5
 	oGui.BackColor := "1F1F1F"
@@ -43,9 +45,8 @@ WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 	SetDarkMode(oGui)
 
 	oGui.Add("Text", "0x200 h" checkBoxH, "Window Title, Class and Process:").GetPos(,, &tW)
-	oGui.AddText("x+m yp Right 0x200 HP W" (320-tW-checkBoxW+oGui.MarginX) , "Follow Mouse")
-	oGui.AddCheckBox("x+0 yp Right Checked vCtrl_FollowMouse HP W" checkBoxW).OnEvent("Click", Checkbox_Focus)
-	
+    oGui.AddDarkCheckBox("yp Right Checked vCtrl_FollowMouse ", "Follow Mouse")
+
 	oGui.Add("Edit", "xm w320 r5 ReadOnly vCtrl_Title" (Wrap ? "" : " -Wrap"))
 	
 	oGui.Add("Text", , "Mouse Position")
@@ -60,11 +61,10 @@ WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 	oGui.Add("Text", , "Status Bar Text:")
 	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_SBText")
 	
-	oGui.Add("Checkbox", "xm r1 vCtrl_IsSlow W" checkBoxW " H" checkBoxH,).OnEvent("Click", Checkbox_Focus)
-	oGui.Add("Text", "x+0 yp HP", "Slow TitleMatchMode")
+	oGui.Add("Text", "xm 0x200 h" checkBoxH, "Visible Text:")
+    oGui.AddDarkCheckBox("yp vCtrl_IsSlow right", "Slow TitleMatchMode")
 
-	oGui.Add("Text", "xm", "Visible Text:")
-	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_VisText")
+	oGui.Add("Edit", "xm w320 r2 ReadOnly vCtrl_VisText")
 
 	oGui.Add("Text", , "All Text:")
 	oGui.Add("Edit", "w320 r2 ReadOnly vCtrl_AllText")
@@ -75,26 +75,26 @@ WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 	oGui.OnEvent("Size", WinSpySize)
 	OnMessage(WM_RBUTTONUP, Right_Click_Event)
 
-	for ctrl in ["Follow Mouse", "Slow TitleMatchMode"]
-		for event in ["Click", "DoubleClick"]
-			oGui[ctrl].OnEvent(event, ToggleCheck)
-
 	for ctrl in oGui
 	{
-		if ctrl Is Gui.Edit
-			ctrl.Opt("cF8F8F8 Background" oGui.BackColor)
+		if (isEdit := ctrl.Type = "Edit")
+			ctrl.Opt("-VScroll cF8F8F8 Background" oGui.BackColor)
 		ctrl.SetFont("cF8F8F8")
-		SetDarkControl(ctrl)
+		SetDarkControl(ctrl, isEdit ? "DarkMode_CFD" : "DarkMode_Explorer")
 	}
 
 	oGui.Show("Hide AutoSize")
 	oGui.GetClientPos(, , &GuiWidth)
 	oGui["Ctrl_FollowMouse"].GetPos(&x_ChBx_FollowMouse)
 	oGui["Follow Mouse"].GetPos(&x_Text_FollowMouse)
+	oGui["Ctrl_IsSlow"].GetPos(&x_ChBx_IsSlow,, &w_ChBx_IsSlow)
+    oGui["Ctrl_IsSlow"].Move(x_ChBx_IsSlow := GuiWidth - w_ChBx_IsSlow - oGui.MarginX)
 
 	oGui.CtrlDistance := Map(
 		"Ctrl_FollowMouse", GuiWidth - x_ChBx_FollowMouse,
-		"Follow Mouse"    , GuiWidth - x_Text_FollowMouse)
+		"Follow Mouse"    , GuiWidth - x_Text_FollowMouse,
+		"Ctrl_IsSlow", GuiWidth - x_ChBx_IsSlow,
+		"Slow TitleMatchMode", GuiWidth - x_ChBx_IsSlow -5)
 
 	oGui.txtNotFrozen := txtNotFrozen       ; create properties for futur use
 	oGui.txtFrozen    := "(Updates suspended)"
@@ -104,28 +104,44 @@ WinSpyGui(fontSize := 11, font := "Segoe UI", Wrap := true)
 	oGui.GetClientPos(, , &Width, &Height)
 	WinSpySize(oGui, 0, Width, Height)
 	SetTimer(Update, 250)
-	oGui.Show("NoActivate AutoSize")
+	oGui.Show("AutoSize")
+    try PostMessage(0x8, , , ControlGetFocus(oGui))
 
 	return oGui
 }
 
-ToggleCheck(GuiCtrlObj, p*)
+AddDarkCheckBox(obj, Options, Text)
 {
-	static checkBoxName := Map("Follow Mouse", "Ctrl_FollowMouse", "Slow TitleMatchMode", "Ctrl_IsSlow")
+    static SM_CXMENUCHECK := 71
+    static SM_CYMENUCHECK := 72
+    static checkBoxW      := SysGet(SM_CXMENUCHECK)
+    static checkBoxH      := SysGet(SM_CYMENUCHECK)
+    
+    chbox := obj.Add("Checkbox", Options " r1.2 +0x4000000", text)
 
-	CheckBoxCtrl := GuiCtrlObj.Gui[checkBoxName[GuiCtrlObj.Value]]
-	ControlClick(CheckBoxCtrl.hwnd, GuiCtrlObj.Gui)
+    if !InStr(Options, "right")
+        txt := obj.Add("Text", "xp+" (checkBoxW+5) " yp+1 HP-4 +0x4000200", Text)
+    else
+        txt := obj.Add("Text", "xp+5 yp+1 HP-4 +0x4000200", Text)
+    
+    chbox.Text := ""
+    chbox.DeleteProp("Text")
+    chbox.DefineProp("Text", {
+        Get: this => txt.Text,
+        Set: (this, value) => txt.Text
+    })
+
+    SetWindowPos(txt.hwnd,0,,,,, 0x43)
+    return chbox
 }
 
-Checkbox_Focus(GuiCtrlObj, Info) {
-	SendMessage(0x8,,, GuiCtrlObj.hwnd, GuiCtrlObj.Gui)
-	return 0
-}
-
+SetWindowPos(hWnd, hWndInsertAfter, X := 0, Y := 0, cx := 0, cy := 0, uFlags := 0x40) => DllCall("User32\SetWindowPos", "ptr", hWnd, "ptr", hWndInsertAfter, "int", X, "int", Y, "int", cx, "int", cy, "uint", uFlags, "int")
+ 
 Right_Click_Event(wParam, lParam, msg, hwnd)
 {
 	static WM_RBUTTONDOWN := 0x0204
-	     , WM_RBUTTONUP   := 0x0205
+	static WM_RBUTTONUP   := 0x0205
+	static WM_COPY        := 0x0301
 
 	GuiCtrl := GuiCtrlFromHwnd(hwnd)
 
@@ -133,16 +149,16 @@ Right_Click_Event(wParam, lParam, msg, hwnd)
 		return 0
 
 	A_Clipboard := ""
-	
+
 	if (GuiCtrl.Name = "Ctrl_Title")
-	   A_Clipboard  := StrReplace(EditGetSelectedText(GuiCtrl, hwnd), "`r`n", "`s")
+		A_Clipboard := StrReplace(EditGetSelectedText(GuiCtrl, hwnd), "`r`n", "`s")
 	else
-		ControlSend("^{Ins}", hwnd)
+		PostMessage(WM_COPY, , , hwnd)
 
 	if ClipWait(1)
 	{
-		ToolTip("Copied: " A_Clipboard)
-		SetTimer(ToolTip, -1000)
+		SetDarkControl(ToolTip("Copied: " A_Clipboard))
+		SetTimer(ToolTip, -1500)
 	}
 	return 0
 }
@@ -152,6 +168,8 @@ WinSpySize(GuiObj?, MinMax?, Width?, Height?)
 
 	Critical("Off")
 	Sleep(-1)
+    SetWinDelay(-1)
+    SetControlDelay(-1)
 
 	if !GuiObj.HasProp("txtNotFrozen") ; WinSpyGui() not done yet, return until it is
 		return
@@ -357,8 +375,15 @@ suspend_timer()
 	UpdateText("Ctrl_Freeze", oGui.txtFrozen)
 }
 
-SetDarkControl(_obj) => DllCall("uxtheme\SetWindowTheme", "ptr", _obj.hwnd, "ptr", StrPtr("DarkMode_Explorer"), "ptr", 0)
-	
+SetDarkControl(ctrl, style := "DarkMode_Explorer")
+{
+	static IsWin11 := (VerCompare(A_OSVersion, "10.0.22000") > 0)
+	hwnd := IsObject(ctrl) ? ctrl.hwnd : ctrl
+	DllCall("uxtheme\SetWindowTheme", "ptr", hwnd, "ptr", StrPtr(style), "ptr", 0)
+	if IsWin11
+		DllCall("Dwmapi\DwmSetWindowAttribute", "Ptr", hwnd, "UInt", 33, "Ptr*", 3, "UInt", 4)
+}
+
 SetDarkMode(_obj)
 {
 	For v in [135, 136]
